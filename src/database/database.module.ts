@@ -5,9 +5,11 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(
-      'mongodb+srv://delusion8399:delusion8399@cluster0.wrea4gz.mongodb.net/blocks?retryWrites=true&w=majority',
-    ),
+    MongooseModule.forRootAsync({
+      useFactory: () => ({
+        uri: process.env.DB_URI,
+      }),
+    }),
   ],
   controllers: [DatabaseController],
   providers: [DatabaseService],
