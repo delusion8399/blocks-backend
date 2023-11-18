@@ -6,10 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { StorageService } from './storage.service';
 import { CreateStorageDto } from './dto/create-storage.dto';
 import { UpdateStorageDto } from './dto/update-storage.dto';
+import { ApiKeyRequest } from 'src/middlewares/auth.middleware';
+import { BlockService } from 'src/block/block.service';
 
 @Controller()
 export class StorageController {
@@ -17,12 +20,14 @@ export class StorageController {
 
   @Post(':blockId')
   create(
+    @Req() req: ApiKeyRequest,
     @Body() createStorageDto: CreateStorageDto,
     @Param() { blockId }: { blockId: string },
   ) {
     return this.storageService.create({
       ...createStorageDto,
       blockId,
+      apiKey: req.apiKey,
     });
   }
 

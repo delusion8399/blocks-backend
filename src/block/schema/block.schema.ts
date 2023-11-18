@@ -16,6 +16,9 @@ export class Block {
 
   @Prop()
   isProtected: boolean;
+
+  @Prop({ required: true })
+  userIdentity: string;
 }
 
 export const BlockSchema = SchemaFactory.createForClass(Block);

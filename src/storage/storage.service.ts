@@ -5,20 +5,45 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Storage } from './schema/storage.schema';
 import { Model } from 'mongoose';
 import sanitizeResponse from 'src/utils/sanitize-response';
+import { Block } from 'src/block/schema/block.schema';
 
 @Injectable()
 export class StorageService {
   constructor(
     @InjectModel(Storage.name) private storageModel: Model<Storage>,
+    @InjectModel(Block.name) private blockModel: Model<Block>,
   ) {}
 
   async create(createStorageDto: CreateStorageDto) {
-    const { blockId, collectionId, ...data } = createStorageDto;
+    const { blockId, collectionId, apiKey, ...data } = createStorageDto;
 
     const insertQuery = { blockId, collectionId, data };
 
-    const response = await this.storageModel.create(insertQuery);
-    return sanitizeResponse(response);
+    try {
+      if (apiKey) {
+        const protectedBlock = await this.blockModel
+          .findOne({ apiKey, isProtected: true })
+          .lean();
+        if (!protectedBlock) {
+          throw new Error('Invalid api key');
+        } else if (protectedBlock.blockId !== blockId) {
+          throw new Error('Invalid api key');
+        }
+      } else {
+        const block = await this.blockModel.findOne({ blockId }).lean();
+        if (block.isProtected) {
+          throw new Error('You need an API key to access this block');
+        }
+        if (!block) {
+          throw new Error('Invalid block');
+        }
+      }
+
+      const response = await this.storageModel.create(insertQuery);
+      return sanitizeResponse(response);
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   async findAll(blockId: string) {
